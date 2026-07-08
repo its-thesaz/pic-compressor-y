@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PicCompressor Y | استودیو پیشرفته پردازش تصویر</title>
+    <link href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css" rel="stylesheet" type="text/css" />
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(-45deg, #f1f5f9, #e2e8f0, #e0e7ff, #fae8ff);
+            --card-bg: rgba(255, 255, 255, 0.45);
+            --card-border: rgba(255, 255, 255, 0.6);
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --primary: #4f46e5;
+            --primary-glow: rgba(79, 70, 229, 0.3);
+            --accent: #d946ef;
+            --success: #10b981;
+            --input-bg: rgba(255, 255, 255, 0.7);
+            --shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05);
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(-45deg, #0f172a, #1e1b4b, #2e1065, #0f172a);
+            --card-bg: rgba(15, 23, 42, 0.6);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #818cf8;
+            --primary-glow: rgba(129, 140, 248, 0.4);
+            --accent: #f43f5e;
+            --success: #34d399;
+            --input-bg: rgba(30, 41, 59, 0.7);
+            --shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* اعمال فونت به صورت کاملاً سراسری */
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif !important;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-size: 400% 400%;
+            animation: moveGradient 12s ease infinite;
+            min-height: 100vh;
+            color: var(--text-main);
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+            transition: background 0.5s, color 0.3s;
+        }
+
+        @keyframes moveGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .glass-box {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .container {
+            width: 100%; max-width: 1250px;
+            display: flex; flex-direction: column; gap: 24px;
+        }
+
+        /* هدر شیک */
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 28px; flex-wrap: wrap; gap: 16px;
+        }
+
+        .brand { display: flex; align-items: center; gap: 16px; }
+        .brand-icon {
+            width: 52px; height: 52px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 16px; display: flex; justify-content: center; align-items: center;
+            color: white; box-shadow: 0 8px 24px var(--primary-glow);
+            animation: pulseGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: translateY(0); box-shadow: 0 8px 24px var(--primary-glow); }
+            50% { transform: translateY(-5px); box-shadow: 0 12px 32px var(--primary-glow); }
+        }
+
+        .brand h1 {
+            font-size: 1.6rem; font-weight: 800;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        .header-tools {
+            display: flex; gap: 14px; align-items: center;
+            direction: ltr !important; 
+        }
+
+        .circle-btn {
+            background: var(--input-bg); border: 1px solid var(--card-border);
+            color: var(--text-main); width: 44px; height: 44px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 1.2rem;
+        }
+        .circle-btn:hover { transform: scale(1.1) rotate(15deg); background: var(--primary); color: white; }
+
+        /* زون آپلود مدرن */
+        .drop-zone {
+            padding: 50px 24px; border: 2px dashed var(--primary);
+            text-align: center; cursor: pointer; transition: all 0.3s ease;
+        }
+        .drop-zone:hover, .drop-zone.drag-over {
+            background: rgba(129, 140, 248, 0.15); border-color: var(--accent); transform: scale(1.005);
+        }
+        .drop-zone svg { width: 56px; height: 56px; color: var(--primary); margin-bottom: 12px; transition: 0.3s; }
+        .drop-zone:hover svg { transform: translateY(-5px) scale(1.05); color: var(--accent); }
+
+        /* میز کار اصلی */
+        .workspace {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 24px; display: none;
+        }
+        .workspace.active { display: grid; }
+
+        .preview-card { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+        .card-top { display: flex; justify-content: space-between; align-items: center; }
+        
+        .glow-badge { padding: 6px 14px; border-radius: 30px; font-weight: 700; font-size: 0.8rem; }
+        .badge-orig { background: rgba(148, 163, 184, 0.15); color: var(--text-main); }
+        .badge-comp { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+
+        .view-frame {
+            width: 100%; height: 320px; border-radius: 16px;
+            background-image: linear-gradient(45deg, rgba(0,0,0,0.05) 25%, transparent 25%), linear-gradient(-45deg, rgba(0,0,0,0.05) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.05) 75%), linear-gradient(-45deg, transparent 75%, rgba(0,0,0,0.05) 75%);
+            background-size: 20px 20px; display: flex; justify-content: center; align-items: center;
+            overflow: hidden; border: 1px solid var(--card-border);
+        }
+        .view-frame img { max-width: 100%; max-height: 100%; object-fit: contain; transition: transform 0.4s; }
+        .view-frame:hover img { transform: scale(1.03); }
+
+        .info-row { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-muted); }
+        .bold-val { font-size: 1.15rem; font-weight: 800; color: var(--text-main); }
+
+        /* پنل تنظیمات پیشرفته */
+        .settings-panel {
+            grid-column: 1 / -1; padding: 28px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 28px;
+        }
+
+        .control-block { display: flex; flex-direction: column; gap: 10px; }
+        .control-block label { font-weight: 700; font-size: 0.88rem; color: var(--text-muted); display: flex; justify-content: space-between; }
+        
+        input[type=range] {
+            -webkit-appearance: none; width: 100%; height: 6px; border-radius: 10px;
+            background: linear-gradient(90deg, var(--primary), var(--accent)); outline: none; margin: 8px 0;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 22px; width: 22px; border-radius: 50%;
+            background: #fff; border: 3px solid var(--primary); cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.2s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        .grid-toggles { display: flex; gap: 8px; flex-wrap: wrap; }
+        .toggle-btn {
+            padding: 9px 16px; border: 1px solid var(--card-border); background: var(--input-bg);
+            color: var(--text-main); border-radius: 12px; cursor: pointer; transition: all 0.2s ease;
+            font-size: 0.82rem; font-weight: 600;
+        }
+        .toggle-btn.active, .toggle-btn:hover {
+            background: var(--primary); color: white; border-color: var(--primary);
+            box-shadow: 0 6px 16px var(--primary-glow);
+        }
+
+        .num-input {
+            width: 95px; padding: 10px; background: var(--input-bg); border: 1px solid var(--card-border);
+            color: var(--text-main); border-radius: 12px; text-align: center; font-weight: bold;
+        }
+        .num-input:focus { border-color: var(--primary); outline: none; }
+
+        .check-label { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.88rem; }
+        .check-label input { width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer; }
+
+        /* دکمه دانلود */
+        .action-btn {
+            grid-column: 1 / -1; padding: 18px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            color: white; border: none; border-radius: 16px; font-size: 1.15rem; font-weight: 800;
+            cursor: pointer; transition: all 0.3s ease; display: flex; justify-content: center;
+            align-items: center; gap: 12px; box-shadow: 0 12px 28px var(--primary-glow);
+        }
+        .action-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(217, 70, 239, 0.4); }
+        .action-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+        .action-btn.working { background: #64748b; cursor: wait; }
+
+        /* فوتر برنامه */
+        .app-footer {
+            text-align: center; margin-top: 20px; font-size: 0.9rem;
+            color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px;
+        }
+        .app-footer span {
+            color: #ef4444; display: inline-block;
+            animation: heartBeat 1.5s infinite ease-in-out;
+        }
+
+        @keyframes heartBeat {
+            0%, 100% { transform: scale(1); }
+            15% { transform: scale(1.3); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.3); }
+        }
+
+        @media (max-width: 768px) {
+            .workspace { grid-template-columns: 1fr; }
+            body { padding: 12px; }
+            .view-frame { height: 220px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="glass-box header">
+        <div class="brand">
+            <div class="brand-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7m4.5 2.5L21 3m0 0h-4.5M21 3v4.5m-5.5 3.5-3 3-2.5-2.5L3 18"/></svg>
+            </div>
+            <div>
+                <h1>PicCompressor Y</h1>
+                <p id="lblSubtitle" style="font-size:0.78rem; color:var(--text-muted)">بهینه‌سازی فوق‌پیشرفته و بومی تصویر</p>
+            </div>
+        </div>
+        <div class="header-tools">
+            <button class="circle-btn" id="themeBtn" title="تغییر تم">🌙</button>
+            <div class="grid-toggles">
+                <button class="toggle-btn active" onclick="changeLanguage('fa')">FA</button>
+                <button class="toggle-btn" onclick="changeLanguage('en')">EN</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="glass-box drop-zone" id="dropZone">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <h3 id="lblDropTitle" style="margin-bottom:6px;">تصویر خود را به این قسمت بکشید یا کلیک کنید</h3>
+        <p id="lblDropHint" style="color:var(--text-muted); font-size:0.85rem;">پشتیبانی از فرمت‌های JPEG, PNG, WebP, BMP, GIF, TIFF, AVIF, HEIC, SVG, ICO</p>
+        <input type="file" id="filePicker" accept="image/*" style="display:none;">
+    </div>
+
+    <div class="workspace" id="mainWorkspace">
+        
+        <div class="glass-box preview-card">
+            <div class="card-top">
+                <span class="glow-badge badge-orig" id="lblOrigBadge">تصویر اصلی</span>
+                <span id="txtOrigDimension" style="color:var(--text-muted); font-size:0.8rem;">-</span>
+            </div>
+            <div class="view-frame"><img id="viewOrig"></div>
+            <div class="info-row">
+                <span id="lblOrigSize">حجم فایل:</span>
+                <span class="bold-val" id="txtOrigSize">-</span>
+            </div>
+        </div>
+
+        <div class="glass-box preview-card">
+            <div class="card-top">
+                <span class="glow-badge badge-comp" id="lblCompBadge">خروجی بهینه شده</span>
+                <span id="txtCompDimension" style="color:var(--text-muted); font-size:0.8rem;">-</span>
+            </div>
+            <div class="view-frame"><img id="viewComp"></div>
+            <div class="info-row">
+                <span id="txtSavingRatio" style="color:var(--success); font-weight:800;">-</span>
+                <span class="bold-val" id="txtCompSize">-</span>
+            </div>
+        </div>
+
+        <div class="glass-box settings-panel">
+            
+            <div class="control-block">
+                <label><span id="lblQuality">کیفیت خروجی (Quality):</span> <span id="valQuality" style="color:var(--primary);">85%</span></label>
+                <input type="range" id="sliderQuality" min="5" max="100" value="85">
+                
+                <label style="margin-top:4px;" id="lblOutputFormat">فرمت خروجی هدف:</label>
+                <div class="grid-toggles" id="formatToggleGroup">
+                    <button class="toggle-btn active" data-fmt="image/jpeg">JPEG</button>
+                    <button class="toggle-btn" data-fmt="image/webp">WebP</button>
+                    <button class="toggle-btn" data-fmt="image/png">PNG</button>
+                    <button class="toggle-btn" data-fmt="image/avif">AVIF</button>
+                    <button class="toggle-btn" data-fmt="image/bmp">BMP</button>
+                </div>
+            </div>
+
+            <div class="control-block">
+                <label id="lblResize">تغییر مقیاس و ابعاد:</label>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="number" id="inputW" class="num-input" placeholder="عرض">
+                    <span style="color:var(--text-muted)">×</span>
+                    <input type="number" id="inputH" class="num-input" placeholder="ارتفاع">
+                    <button class="toggle-btn active" id="lockAspectBtn" title="قفل نسبت تصویر">🔒</button>
+                </div>
+                <div class="grid-toggles" style="margin-top:6px;">
+                    <button class="toggle-btn" onclick="applyPresetScale(0.25)">25%</button>
+                    <button class="toggle-btn" onclick="applyPresetScale(0.50)">50%</button>
+                    <button class="toggle-btn" onclick="applyPresetScale(0.75)">75%</button>
+                    <button class="toggle-btn" onclick="applyPresetScale(1.00)" id="btnScaleOrig">100%</button>
+                </div>
+                <label style="margin-top:8px;" id="lblRotate">چرخش تصویر:</label>
+                <div class="grid-toggles">
+                    <button class="toggle-btn active" data-rot="0">0°</button>
+                    <button class="toggle-btn" data-rot="90">90° ↻</button>
+                    <button class="toggle-btn" data-rot="180">180°</button>
+                    <button class="toggle-btn" data-rot="270">270° ↺</button>
+                </div>
+            </div>
+
+            <div class="control-block">
+                <label><span id="lblBrightness">روشنایی (Brightness):</span> <span id="valBri">100%</span></label>
+                <input type="range" id="sliderBri" min="40" max="160" value="100">
+                
+                <label><span id="lblContrast">کنتراست (Contrast):</span> <span id="valCon">100%</span></label>
+                <input type="range" id="sliderCon" min="40" max="160" value="100">
+
+                <label><span id="lblSaturation">اشباع رنگ (Saturation):</span> <span id="valSat">100%</span></label>
+                <input type="range" id="sliderSat" min="0" max="200" value="100">
+                
+                <label><span id="lblBlur">میزان تاری (Blur):</span> <span id="valBlur">0px</span></label>
+                <input type="range" id="sliderBlur" min="0" max="20" value="0">
+            </div>
+
+            <div class="control-block" style="justify-content: center; gap:14px;">
+                <label class="check-label">
+                    <input type="checkbox" id="checkSharpen">
+                    <span id="lblSharpenOpt">افزایش تیزسازی لبه‌ها (Sharpen Effect)</span>
+                </label>
+                <label class="check-label">
+                    <input type="checkbox" id="checkWhiteBg">
+                    <span id="lblBgOpt">جایگذاری پس‌زمینه سفید برای تصاویر شفاف (JPEG)</span>
+                </label>
+            </div>
+
+            <button class="action-btn" id="downloadBtn" disabled>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                <span id="lblDownloadBtn">دانلود فایل خروجی بهینه شده</span>
+            </button>
+        </div>
+    </div>
+    
+    <footer class="app-footer">
+        Developed by THE SAZ<span>❤️</span>
+    </footer>
+</div>
+
+<script>
+    // --- پوسته گرافیکی ---
+    const themeBtn = document.getElementById('themeBtn');
+    themeBtn.addEventListener('click', () => {
+        const root = document.documentElement;
+        const current = root.getAttribute('data-theme');
+        const nextMode = current === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', nextMode);
+        themeBtn.textContent = nextMode === 'dark' ? '🌙' : '☀️';
+    });
+
+    // --- مدیریت متغیرها و پایداری مموری ---
+    let sourceFile = null, rawDataUrl = null, loadedImg = null;
+    let baseW = 0, baseH = 0, compiledBlob = null, compiledUrl = null;
+    let processingTimeout;
+    let workingState = false;
+    let targetFormat = 'image/jpeg';
+    let isAspectLocked = true;
+    let currentRotation = 0; 
+
+    // --- عناصر DOM ---
+    const dropZone = document.getElementById('dropZone');
+    const filePicker = document.getElementById('filePicker');
+    const mainWorkspace = document.getElementById('mainWorkspace');
+    const sliderQuality = document.getElementById('sliderQuality');
+    const inputW = document.getElementById('inputW');
+    const inputH = document.getElementById('inputH');
+    const lockAspectBtn = document.getElementById('lockAspectBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    
+    const sliderBri = document.getElementById('sliderBri');
+    const sliderCon = document.getElementById('sliderCon');
+    const sliderSat = document.getElementById('sliderSat');
+    const sliderBlur = document.getElementById('sliderBlur');
+    const checkSharpen = document.getElementById('checkSharpen');
+    const checkWhiteBg = document.getElementById('checkWhiteBg');
+
+    const viewOrig = document.getElementById('viewOrig');
+    const viewComp = document.getElementById('viewComp');
+    const txtOrigDimension = document.getElementById('txtOrigDimension');
+    const txtCompDimension = document.getElementById('txtCompDimension');
+    const txtOrigSize = document.getElementById('txtOrigSize');
+    const txtCompSize = document.getElementById('txtCompSize');
+    const txtSavingRatio = document.getElementById('txtSavingRatio');
+
+    // --- آپلود و بارگذاری فایل ---
+    dropZone.addEventListener('click', () => filePicker.click());
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('drag-over'); initFile(e.dataTransfer.files[0]); });
+    filePicker.addEventListener('change', e => { if(e.target.files.length) initFile(e.target.files[0]); });
+
+    const readableSize = b => {
+        if(!b) return '0 B';
+        const k = 1024, units = ['B', 'KB', 'MB'];
+        const i = Math.floor(Math.log(b) / Math.log(k));
+        return parseFloat((b / Math.pow(k, i)).toFixed(2)) + ' ' + units[i];
+    };
+
+    function initFile(file) {
+        if (!file || !file.type.startsWith('image/')) {
+            alert('فایل انتخاب شده معتبر نیست. لطفا یک تصویر انتخاب کنید.');
+            return;
+        }
+        sourceFile = file;
+        
+        // ریست مقادیر به پیش‌فرض
+        sliderBri.value = 100; sliderCon.value = 100; sliderSat.value = 100; sliderBlur.value = 0;
+        document.getElementById('valBri').textContent = '100%';
+        document.getElementById('valCon').textContent = '100%';
+        document.getElementById('valSat').textContent = '100%';
+        document.getElementById('valBlur').textContent = '0px';
+        inputW.value = ''; inputH.value = '';
+        currentRotation = 0;
+        document.querySelectorAll('[data-rot]').forEach(b => b.classList.toggle('active', b.dataset.rot === '0'));
+        
+        // پاکسازی مموری (Stability improvement)
+        if(rawDataUrl) URL.revokeObjectURL(rawDataUrl);
+        if(compiledUrl) URL.revokeObjectURL(compiledUrl);
+        
+        rawDataUrl = URL.createObjectURL(file);
+        viewOrig.src = rawDataUrl;
+        
+        loadedImg = new Image();
+        loadedImg.onload = () => {
+            if(!loadedImg.naturalWidth || !loadedImg.naturalHeight) return; // گارد پایداری
+            baseW = loadedImg.naturalWidth;
+            baseH = loadedImg.naturalHeight;
+            txtOrigDimension.textContent = `${baseW} × ${baseH}`;
+            txtOrigSize.textContent = readableSize(file.size);
+            
+            mainWorkspace.classList.add('active');
+            requestProcessing();
+        };
+        loadedImg.src = rawDataUrl;
+    }
+
+    // --- مدیریت قفل ابعاد و اسکیل ---
+    lockAspectBtn.addEventListener('click', () => {
+        isAspectLocked = !isAspectLocked;
+        lockAspectBtn.textContent = isAspectLocked ? '🔒' : '🔓';
+        lockAspectBtn.classList.toggle('active', isAspectLocked);
+    });
+
+    inputW.addEventListener('input', () => {
+        if(isAspectLocked && inputW.value && baseW) {
+            inputH.value = Math.round((inputW.value / baseW) * baseH);
+        }
+        requestProcessing();
+    });
+    inputH.addEventListener('input', () => {
+        if(isAspectLocked && inputH.value && baseH) {
+            inputW.value = Math.round((inputH.value / baseH) * baseW);
+        }
+        requestProcessing();
+    });
+
+    function applyPresetScale(percentage) {
+        if(!loadedImg || !baseW) return;
+        inputW.value = Math.round(baseW * percentage);
+        inputH.value = Math.round(baseH * percentage);
+        requestProcessing();
+    }
+
+    // --- واچ کردن مقادیر ---
+    const linkSliderValue = (slider, outputId, unit = '%') => {
+        slider.addEventListener('input', () => {
+            document.getElementById(outputId).textContent = slider.value + unit;
+            requestProcessing();
+        });
+    };
+    linkSliderValue(sliderQuality, 'valQuality', '%');
+    linkSliderValue(sliderBri, 'valBri', '%');
+    linkSliderValue(sliderCon, 'valCon', '%');
+    linkSliderValue(sliderSat, 'valSat', '%');
+    linkSliderValue(sliderBlur, 'valBlur', 'px');
+
+    checkSharpen.addEventListener('change', requestProcessing);
+    checkWhiteBg.addEventListener('change', requestProcessing);
+
+    const targetFmtButtons = document.querySelectorAll('#formatToggleGroup .toggle-btn');
+    targetFmtButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            targetFmtButtons.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            targetFormat = e.target.dataset.fmt;
+            requestProcessing();
+        });
+    });
+
+    const rotationButtons = document.querySelectorAll('[data-rot]');
+    rotationButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            rotationButtons.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            currentRotation = parseInt(e.target.dataset.rot);
+            requestProcessing();
+        });
+    });
+
+    // --- پردازش تصویر ---
+    function requestProcessing() {
+        clearTimeout(processingTimeout);
+        processingTimeout = setTimeout(executeEngine, 300);
+    }
+
+    function nativeSharpen(ctx, w, h) {
+        try {
+            const weights = [0, -1, 0, -1, 5, -1, 0, -1, 0];
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const data = imgData.data;
+            const copy = new Uint8ClampedArray(data);
+            for (let y = 1; y < h - 1; y++) {
+                for (let x = 1; x < w - 1; x++) {
+                    const sy = y * w * 4 + x * 4;
+                    for (let c = 0; c < 3; c++) {
+                        let r = 0;
+                        for (let ky = -1; ky <= 1; ky++) {
+                            for (let kx = -1; kx <= 1; kx++) {
+                                const px = sy + ky * w * 4 + kx * 4;
+                                r += copy[px + c] * weights[(ky + 1) * 3 + (kx + 1)];
+                            }
+                        }
+                        data[sy + c] = Math.min(255, Math.max(0, r));
+                    }
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+        } catch(e) { console.warn("Sharpening skipped due to error", e); }
+    }
+
+    async function executeEngine() {
+        if(!loadedImg || !baseW || workingState) return;
+        workingState = true;
+        
+        downloadBtn.classList.add('working');
+        downloadBtn.textContent = document.documentElement.lang === 'en' ? 'Processing... ⏳' : 'در حال پردازش هسته... ⏳';
+
+        // فرصت به مرورگر برای آپدیت UI
+        await new Promise(r => setTimeout(r, 50)); 
+
+        try {
+            const targetW = parseInt(inputW.value) || baseW;
+            const targetH = parseInt(inputH.value) || baseH;
+
+            const needFlip = currentRotation === 90 || currentRotation === 270;
+            const finalCanvasW = needFlip ? targetH : targetW;
+            const finalCanvasH = needFlip ? targetW : targetH;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = finalCanvasW; canvas.height = finalCanvasH;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+            if(checkWhiteBg.checked && targetFormat !== 'image/png') {
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, finalCanvasW, finalCanvasH);
+            }
+
+            ctx.filter = `brightness(${sliderBri.value}%) contrast(${sliderCon.value}%) saturate(${sliderSat.value}%) blur(${sliderBlur.value}px)`;
+
+            ctx.translate(finalCanvasW / 2, finalCanvasH / 2);
+            ctx.rotate((currentRotation * Math.PI) / 180);
+            ctx.drawImage(loadedImg, -targetW / 2, -targetH / 2, targetW, targetH);
+
+            if(checkSharpen.checked) {
+                ctx.filter = 'none'; 
+                nativeSharpen(ctx, finalCanvasW, finalCanvasH);
+            }
+
+            const compQuality = parseInt(sliderQuality.value) / 100;
+            
+            canvas.toBlob((blob) => {
+                if(!blob) throw new Error("Blob creation failed");
+                if(compiledUrl) URL.revokeObjectURL(compiledUrl);
+                compiledBlob = blob;
+                compiledUrl = URL.createObjectURL(blob);
+                
+                viewComp.src = compiledUrl;
+                txtCompDimension.textContent = `${finalCanvasW} × ${finalCanvasH}`;
+                txtCompSize.textContent = readableSize(blob.size);
+                
+                const savedDiff = sourceFile.size - blob.size;
+                const isFa = document.documentElement.lang === 'fa';
+                if(savedDiff > 0) {
+                    const pct = Math.round((savedDiff / sourceFile.size) * 100);
+                    txtSavingRatio.textContent = isFa ? `کاهش حجم: ${pct}% ↓` : `Reduced: ${pct}% ↓`;
+                    txtSavingRatio.style.color = 'var(--success)';
+                } else {
+                    const pct = Math.round((Math.abs(savedDiff) / sourceFile.size) * 100);
+                    txtSavingRatio.textContent = isFa ? `افزایش حجم: ${pct}% ↑` : `Increased: ${pct}% ↑`;
+                    txtSavingRatio.style.color = 'var(--accent)';
+                }
+
+                downloadBtn.disabled = false;
+                downloadBtn.classList.remove('working');
+                downloadBtn.textContent = isFa ? 'دانلود فایل خروجی بهینه شده' : 'Download Optimized Image';
+                workingState = false;
+            }, targetFormat, compQuality);
+
+        } catch (error) {
+            console.error("Processing error:", error);
+            workingState = false;
+            downloadBtn.classList.remove('working');
+            downloadBtn.textContent = document.documentElement.lang === 'fa' ? 'خطا در پردازش. دوباره تلاش کنید' : 'Error. Try again';
+        }
+    }
+
+    // --- دانلود خروجی هوشمند ---
+    downloadBtn.addEventListener('click', () => {
+        if(!compiledBlob) return;
+        const extension = targetFormat.split('/')[1];
+        const rawName = sourceFile.name.replace(/\.[^/.]+$/, "");
+        
+        // اعمال برند شما در نام فایل دانلود شده
+        const finalFileName = `${rawName}_PicCompressorY.${extension}`;
+        
+        const trigger = document.createElement('a');
+        trigger.href = compiledUrl;
+        trigger.download = finalFileName;
+        document.body.appendChild(trigger);
+        trigger.click();
+        document.body.removeChild(trigger);
+    });
+
+    // --- ترجمه دوزبانه ---
+    const dict = {
+        fa: {
+            sub: 'بهینه‌سازی فوق‌پیشرفته و بومی تصویر',
+            dropT: 'تصویر خود را به این قسمت بکشید یا کلیک کنید',
+            dropH: 'پشتیبانی از فرمت‌های JPEG, PNG, WebP, BMP, GIF, TIFF, AVIF, HEIC, SVG, ICO',
+            origB: 'تصویر اصلی', compB: 'خروجی بهینه شده', size: 'حجم فایل:',
+            q: 'کیفیت خروجی (Quality):', format: 'فرمت خروجی هدف:', resize: 'تغییر مقیاس و ابعاد:',
+            rotate: 'چرخش تصویر:', sharp: 'افزایش تیزسازی لبه‌ها (Sharpen Effect)',
+            bg: 'جایگذاری پس‌زمینه سفید برای تصاویر شفاف (JPEG)', dl: 'دانلود فایل خروجی بهینه شده'
+        },
+        en: {
+            sub: 'Ultra-Advanced Local Image Optimization Studio',
+            dropT: 'Drag & Drop your image here or Click to browse',
+            dropH: 'Supports JPEG, PNG, WebP, BMP, GIF, TIFF, AVIF, HEIC, SVG, ICO',
+            origB: 'Original Image', compB: 'Optimized Result', size: 'File Size:',
+            q: 'Output Quality:', format: 'Target Output Format:', resize: 'Scale & Resize Dimensions:',
+            rotate: 'Rotate Image:', sharp: 'Enhance Edges (Sharpen Filter)',
+            bg: 'Apply White Background for Transparencies (JPEG)', dl: 'Download Optimized Image'
+        }
+    };
+
+    function changeLanguage(lang) {
+        document.documentElement.lang = lang;
+        document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+        
+        document.querySelectorAll('.grid-toggles .toggle-btn').forEach(b => {
+            if(b.textContent.toLowerCase() === lang) b.classList.add('active');
+            else if(b.textContent === 'FA' || b.textContent === 'EN') b.classList.remove('active');
+        });
+
+        document.getElementById('lblSubtitle').textContent = dict[lang].sub;
+        document.getElementById('lblDropTitle').textContent = dict[lang].dropT;
+        document.getElementById('lblDropHint').textContent = dict[lang].dropH;
+        document.getElementById('lblOrigBadge').textContent = dict[lang].origB;
+        document.getElementById('lblCompBadge').textContent = dict[lang].compB;
+        document.getElementById('lblOrigSize').textContent = dict[lang].size;
+        document.getElementById('lblQuality').textContent = dict[lang].q;
+        document.getElementById('lblOutputFormat').textContent = dict[lang].format;
+        document.getElementById('lblResize').textContent = dict[lang].resize;
+        document.getElementById('lblRotate').textContent = dict[lang].rotate;
+        document.getElementById('lblSharpenOpt').textContent = dict[lang].sharp;
+        document.getElementById('lblBgOpt').textContent = dict[lang].bg;
+        
+        if(!workingState) {
+            document.getElementById('lblDownloadBtn').textContent = dict[lang].dl;
+        }
+        if(loadedImg) requestProcessing();
+    }
+</script>
+</body>
+</html>
